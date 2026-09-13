@@ -52,4 +52,29 @@ public class FileService {
 
         return fileRepository.save(newFile);
     }
+    public java.util.List<File> getUserFiles(String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return fileRepository.findByUserIdAndIsDeletedFalse(user.getId());
+    }
+    public File getFileForDownload(Long fileId, String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        File file = fileRepository.findById(fileId)
+                .orElseThrow(() -> new RuntimeException("File not found"));
+
+        if (!file.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Access denied");
+        }
+
+        if (file.getIsDeleted()) {
+            throw new RuntimeException("File has been deleted");
+        }
+
+        return file;
+    }
 }

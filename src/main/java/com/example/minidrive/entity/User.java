@@ -3,6 +3,7 @@ package com.example.minidrive.entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.Date;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "users")
@@ -18,6 +19,7 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @JsonIgnore
     @Column(nullable = false)
     private String password;
 
