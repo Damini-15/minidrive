@@ -77,4 +77,24 @@ public class FileService {
 
         return file;
     }
+    public void deleteFile(Long fileId, String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        File file = fileRepository.findById(fileId)
+                .orElseThrow(() -> new RuntimeException("File not found"));
+
+        if (!file.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Access denied");
+        }
+
+        if (file.getIsDeleted()) {
+            throw new RuntimeException("File already deleted");
+        }
+
+        file.setIsDeleted(true);
+
+        fileRepository.save(file);
+    }
 }

@@ -3,6 +3,7 @@ package com.example.minidrive.controller;
 import com.example.minidrive.entity.File;
 import com.example.minidrive.service.FileService;
 import com.example.minidrive.service.S3Service;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -78,6 +79,29 @@ public class FileController {
         } catch (Exception e) {
 
             return ResponseEntity.badRequest().build();
+        }
+    }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteFile(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        try {
+            String email = authentication.getName();
+
+            fileService.deleteFile(id, email);
+
+            return ResponseEntity.ok("File deleted successfully");
+
+        } catch (RuntimeException e) {
+
+            if (e.getMessage().equals("Access denied")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("Access denied");
+            }
+
+            return ResponseEntity.badRequest()
+                    .body(e.getMessage());
         }
     }
 }
