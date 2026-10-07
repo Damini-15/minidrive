@@ -1,7 +1,9 @@
 package com.example.minidrive.controller;
 
 import com.example.minidrive.entity.File;
+import com.example.minidrive.entity.FileShare;
 import com.example.minidrive.service.FileService;
+import com.example.minidrive.service.FileShareService;
 import com.example.minidrive.service.S3Service;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,9 +19,15 @@ public class FileController {
 
     private final FileService fileService;
     private final S3Service s3Service;
-    public FileController(FileService fileService, S3Service s3Service) {
+    private final FileShareService fileShareService;
+    public FileController(
+            FileService fileService,
+            S3Service s3Service,
+            FileShareService fileShareService) {
+
         this.fileService = fileService;
         this.s3Service = s3Service;
+        this.fileShareService = fileShareService;
     }
 
     @PostMapping("/upload")
@@ -76,7 +84,12 @@ public class FileController {
                     )
                     .body(data);
 
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+
+            if ("Access denied".equals(e.getMessage())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
 
             return ResponseEntity.badRequest().build();
         }
@@ -100,6 +113,50 @@ public class FileController {
                         .body("Access denied");
             }
 
+            return ResponseEntity.badRequest()
+                    .body(e.getMessage());
+        }
+    }
+    @PostMapping("/{id}/share")
+    public ResponseEntity<?> shareFile(
+            @PathVariable Long id,
+            @RequestParam String email,
+            @RequestParam String permission,
+            Authentication authentication) {
+
+        try {
+            String ownerEmail = authentication.getName();
+
+            FileShare fileShare = fileShareService.shareFile(
+                    id,
+                    ownerEmail,
+                    email,
+                    permission
+            );
+
+            return ResponseEntity.ok(fileShare);
+
+        } catch (RuntimeException e) {
+
+            if (e.getMessage().equals("Access denied")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("Access denied");
+            }
+
+            return ResponseEntity.badRequest()
+                    .body(e.getMessage());
+        }
+    }
+    @GetMapping("/shared")
+    public ResponseEntity<?> getSharedFiles(Authentication authentication) {
+        try {
+            String email = authentication.getName();
+
+            return ResponseEntity.ok(
+                    fileShareService.getSharedFiles(email)
+            );
+
+        } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
                     .body(e.getMessage());
         }
