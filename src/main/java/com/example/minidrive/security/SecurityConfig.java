@@ -69,14 +69,18 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/register.html",
+                                "/",
+                                "/index.html",
                                 "/login.html",
+                                "/register.html",
+                                "/dashboard.html",
+                                "/style.css",
+                                "/script.js",
                                 "/css/**",
                                 "/js/**",
                                 "/api/auth/register",
                                 "/api/auth/login"
                         ).permitAll()
-
                         .anyRequest().authenticated()
                 )
 
